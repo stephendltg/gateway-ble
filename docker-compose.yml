@@ -3,11 +3,11 @@ version: "3.4"
 services:
 
   # ----------------------------  
-  # EPYO BROKER
+  # BROKER
   # ----------------------------
-  epyo-broker-emqx:
-    container_name: epyo-broker-emqx
-    hostname: epyo-broker-emqx
+  broker-emqx:
+    container_name: broker-emqx
+    hostname: broker-emqx
     image: emqx/emqx-edge:4.2.7
     restart: always
     environment:
@@ -26,11 +26,11 @@ services:
       - '127.0.0.1:18083:18083' # dashboard
       - '127.0.0.1:8081:8081'   # Api http
   # ---------------------------------
-  # Epyo     monitoring process
-   # ---------------------------------
-  epyo-tsdb:
-    container_name: epyo-tsdb
-    hostname: epyo-tsdb
+  #      monitoring process
+  # ---------------------------------
+  tsdb:
+    container_name: tsdb
+    hostname: tsdb
     image: influxdb:1.8.4-alpine
     restart: always
     ports: 
@@ -43,8 +43,8 @@ services:
     volumes:
       - vol-tsdb-data:/var/lib/influxdb
     
-  epyo-chronograf:
-    container_name: epyo-chronograf
+  chronograf:
+    container_name: chronograf
     image: chronograf:1.8.8-alpine
     restart: always
     ports:
@@ -52,18 +52,18 @@ services:
     volumes:
       - vol-chronograf-data:/var/lib/chronograf
     depends_on:
-      - epyo-tsdb
+      - tsdb
     environment:
-      - INFLUXDB_URL=http://epyo-tsdb:8086
+      - INFLUXDB_URL=http://tsdb:8086
       - INFLUXDB_USERNAME=${INFLUXDB_USERNAME:-epyo}
       - INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD:-epyois100%MAGIC}
   
   # ---------------------------------
   # Docker management
   # ---------------------------------
-  # epyo-portainer:
+  # portainer:
   #   image: portainer/portainer:1.24.1-alpine
-  #   container_name: epyo-portainer
+  #   container_name: portainer
   #   volumes: 
   #     - /var/run/docker.sock:/var/run/docker.sock
   #     - vol-portainer-data:/data
