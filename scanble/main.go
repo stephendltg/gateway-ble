@@ -63,7 +63,11 @@ func advHandler(a ble.Advertisement) {
 	// debugger
 	debugger := log.WithFields(log.Fields{"package": "SCANBLE:HANDLER"})
 
-	// if a.Addr().String() != "ac:23:3f:a2:7e:ce" {
+	// if a.Addr().String() != "ac:23:3f:58:a9:d1" {
+	// 	return
+	// }
+
+	// if a.LocalName() != "P PIR 00000A" {
 	// 	return
 	// }
 

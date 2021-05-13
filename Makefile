@@ -9,20 +9,21 @@ GOVET=$(GOCMD) vet
 GOFMT=gofmt
 GOLINT=golint
 BINARY_NAME=gateway-ble
+AUTHOR=stephendltg
 
-all: deps tool build
+all: deps tool build-linux build-rasp
 
 dev:
-	$(GORUN) main.go -du=10s -mqtt=127.0.0.1:1883 -db=http://127.0.0.1:8086 -debug
+	$(GORUN) main.go -du=0 -mqtt=127.0.0.1:1883 -db=http://127.0.0.1:8086 -debug
 
 build:
 	$(GOBUILD) -v .
 
 build-linux:
-	GOOS=linux $(GOBUILD) -v -o $(BINARY_NAME)-linux .
+	GOOS=linux $(GOBUILD) -v -o build/$(BINARY_NAME)-linux .
 
 build-rasp:
-	GOOS=linux GOARCH=arm GOARM=5 $(GOBUILD) -v -o $(BINARY_NAME)-rasp .
+	GOOS=linux GOARCH=arm GOARM=5 $(GOBUILD) -v -o build/$(BINARY_NAME)-rasp .
 
 tool:
 	$(GOVET) ./...; true
@@ -31,8 +32,8 @@ tool:
 clean:
 	go clean -i .
 	rm -f $(BINARY_NAME)
-	rm -f $(BINARY_NAME)-linux
-	rm -f $(BINARY_NAME)-rasp
+	rm -f build/$(BINARY_NAME)-linux
+	rm -f build/$(BINARY_NAME)-rasp
 
 deps:
 	go mod tidy
@@ -45,8 +46,8 @@ docker-stop:
 	docker-compose down -v
 
 docker-build: clean build
-	docker build -t $(BINARY_NAME) .
- 	docker run --rm $(BINARY_NAME):latest
+	docker build -t $(AUTHOR)/$(BINARY_NAME) .
+ 	docker run --rm $(AUTHOR)/$(BINARY_NAME):latest
 
 help:
 	@echo "make: compile packages and dependencies"

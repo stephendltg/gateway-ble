@@ -12,7 +12,7 @@
     "linux"
   ],
   "contributors": [
-    "s.deletang@icloud.com"
+    "stephen@epyo.eu"
   ],
   "scripts": {
     "docker:start": "sudo docker-compose up -d --build",
@@ -23,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stephendltg/gateway-ble.git"
+    "url": "git+https://stephen-epyo@bitbucket.org/stephen-epyo/gateway-ble.git"
   },
   "keywords": [
     "bluetooth",
@@ -31,7 +31,7 @@
     "influxdb",
     "golang"
   ],
-  "author": "s.deletang@icloud.com",
+  "author": "stephen@epyo.eu",
   "license": "ISC",
-  "homepage": "https://github.com/stephendltg/gateway-ble#readme"
+  "homepage": "https://bitbucket.org/stephen-epyo/gateway-ble#readme"
 }
