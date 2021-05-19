@@ -4,8 +4,11 @@
 ## USAGE
 
 Get binary gateway-ble
+
 > chmod +x gateway-ble
+
 > sudo ./gateway-ble -mqtt=127.0.0.1:1883 -db=http://127.0.0.1:8086 -debug
+
 
 |   params              | value                 |   Description             |
 |   ==========          | ====================  | =================         |
@@ -118,12 +121,12 @@ Add /usr/local/go/bin to the PATH environment variable
 
 ### REFERENCES
 
-__ref__: https://awesomeopensource.com/project/miguelmota/golang-for-nodejs-developers
-__ref__: https://www.beaconzone.co.uk/blog/
-__ref__: https://github.com/golang/go/wiki/GoArm
-__ref__: https://gorm.io/docs/index.html
-__ref__: https://github.com/tevjef/go-runtime-metrics
-__ref__: https://stackoverflow.com/questions/45585589/golang-fatal-error-concurrent-map-read-and-map-write/45585833
+- __ref__: https://awesomeopensource.com/project/miguelmota/golang-for-nodejs-developers
+- __ref__: https://www.beaconzone.co.uk/blog/
+- __ref__: https://github.com/golang/go/wiki/GoArm
+- __ref__: https://gorm.io/docs/index.html
+- __ref__: https://github.com/tevjef/go-runtime-metrics
+- __ref__: https://stackoverflow.com/questions/45585589/golang-fatal-error-concurrent-map-read-and-map-write/45585833
 
 
 
