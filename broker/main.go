@@ -3,10 +3,12 @@ package broker
 import (
 	"encoding/json"
 	"fmt"
+	"gateway-ble/store"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -68,18 +70,22 @@ func Connect(host *string, port *string, username *string, password *string) {
 
 	// Connection lost handler
 	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
+		store.Set("mqtt:status", "lost error")
 		debugger.Trace("Connection lost error", err.Error())
 	})
 	// Broker reconnection
 	opts.SetReconnectingHandler(func(c mqtt.Client, options *mqtt.ClientOptions) {
+		store.Set("mqtt:status", "reconnect")
 		debugger.Trace("Reconnecting")
 	})
 	// Broker connect
 	opts.OnConnect = func(c mqtt.Client) {
 		debugger.Info("Connected")
+		store.Set("mqtt:status", "connected")
 	}
 	//Broker connection lost
 	opts.OnConnectionLost = func(c mqtt.Client, err error) {
+		store.Set("mqtt:status", "lost")
 		debugger.Warn("Connect lost: ", err.Error())
 	}
 
@@ -90,11 +96,19 @@ func Connect(host *string, port *string, username *string, password *string) {
 		debugger.Warn(token.Error())
 	} else {
 		// Subscribe
-		// topic := "gateway/epyo/status"
+		// topic := "gateway/ble/status"
 		// subscribe := client.Subscribe(topic, 1, nil)
 		// subscribe.Wait()
 		// debugger.Info(fmt.Sprintf("Subscribed to topic %s", topic))
 	}
+
+	// Cron jobs
+	c := cron.New()
+	interval := store.Get("mqtt:interval", nil)
+	c.AddFunc("@every "+interval, func() {
+		Publish(store.BeaconsList())
+	})
+	c.Start()
 
 	// Test
 	// publish(client)
@@ -105,13 +119,20 @@ func Publish(playload interface{}) {
 
 	debugger := log.WithFields(log.Fields{"package": "BROKER:PUBLISH"})
 
-	b, err := json.Marshal(playload)
+	// b, err := json.Marshal(playload)
+	// if err != nil {
+	// 	debugger.Warn("JSON Marsham Error", err)
+	// } else {
+	// 	token := client.Publish("gateway/ble/status", 0, false, b)
+	// 	token.Wait()
+	// }
+
+	jsonString, err := json.Marshal(playload)
 	if err != nil {
 		debugger.Warn("JSON Marsham Error", err)
-	} else {
-		token := client.Publish("gateway/epyo/status", 0, false, b)
-		token.Wait()
 	}
+	token := client.Publish("gateway/ble/status", 0, false, jsonString)
+	token.Wait()
 
 }
 
@@ -120,7 +141,7 @@ func Publish(playload interface{}) {
 // 	num := 10
 // 	for i := 0; i < num; i++ {
 // 		text := fmt.Sprintf("Message %d", i)
-// 		token := client.Publish("gateway/epyo/status", 0, false, text)
+// 		token := client.Publish("gateway/ble/status", 0, false, text)
 // 		token.Wait()
 // 		time.Sleep(time.Second)
 // 	}

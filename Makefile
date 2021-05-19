@@ -16,8 +16,8 @@ all: deps tool build-linux build-rasp
 dev:
 	$(GORUN) main.go -du=0 -mqtt=127.0.0.1:1883 -db=http://127.0.0.1:8086 -debug
 
-build:
-	$(GOBUILD) -v .
+build-app:
+	$(GOBUILD) -v -race .
 
 build-linux:
 	GOOS=linux $(GOBUILD) -v -o build/$(BINARY_NAME)-linux .
@@ -34,6 +34,7 @@ clean:
 	rm -f $(BINARY_NAME)
 	rm -f build/$(BINARY_NAME)-linux
 	rm -f build/$(BINARY_NAME)-rasp
+	rm -f *.db
 
 deps:
 	go mod tidy

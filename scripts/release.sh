@@ -22,8 +22,6 @@ git add -u
 # Make build
 make clean
 make
-make build-linux
-make build-rasp
 
 # Update version
 update_version 'package.json' $next_version

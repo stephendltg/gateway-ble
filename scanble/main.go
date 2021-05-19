@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"gateway-ble/broker"
+	"gateway-ble/beacon"
 	"gateway-ble/store"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-ble/ble"
@@ -16,21 +18,21 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Vars
-type Beacon struct {
-	Datetime         string
-	Mac              string
-	Rssi             int
-	Name             string
-	Connectable      bool
-	TxPower          int
-	UUID             []string
-	DATA             []string
-	Services         []string
-	ManufacturerData string
-	SolicitedService []string
-	OverflowService  []string
-}
+// // Vars
+// type Beacon struct {
+// 	Datetime         string
+// 	Mac              string
+// 	Rssi             int
+// 	Name             string
+// 	Connectable      bool
+// 	TxPower          int
+// 	UUID             []string
+// 	DATA             []string
+// 	Services         []string
+// 	ManufacturerData string
+// 	SolicitedService []string
+// 	OverflowService  []string
+// }
 
 // Start Scanner BLE
 func Start(device string, duration time.Duration, duplicate bool) {
@@ -55,6 +57,7 @@ func Start(device string, duration time.Duration, duplicate bool) {
 		ctx = ble.WithSigHandler(context.Background(), nil)
 	}
 	chkErr(ble.Scan(ctx, duplicate, advHandler, nil))
+
 }
 
 // Scan ble handler
@@ -63,14 +66,23 @@ func advHandler(a ble.Advertisement) {
 	// debugger
 	debugger := log.WithFields(log.Fields{"package": "SCANBLE:HANDLER"})
 
-	// if a.Addr().String() != "ac:23:3f:58:a9:d1" {
-	// 	return
-	// }
+	// RSSI filter
+	rssi, _ := strconv.Atoi(store.Get("filter:rssi", nil))
+	if (rssi * -1) > a.RSSI() {
+		return
+	}
 
-	// if a.LocalName() != "P PIR 00000A" {
-	// 	return
-	// }
+	// NAME filter
+	if !strings.Contains(a.LocalName(), strings.Replace(store.Get("filter:name", nil), "%", " ", -1)) {
+		return
+	}
 
+	// MAC FILTER
+	if !strings.Contains(a.Addr().String(), strings.Replace(store.Get("filter:mac", nil), "%", " ", -1)) {
+		return
+	}
+
+	// Vars
 	Data := []string{}
 	UUID := []string{}
 	Services := []string{}
@@ -103,23 +115,34 @@ func advHandler(a ble.Advertisement) {
 		}
 	}
 
-	m := Beacon{
-		time.Now().Format("2006-01-02T15:04:05.000Z"),
-		a.Addr().String(),
-		a.RSSI(),
-		a.LocalName(),
-		a.Connectable(),
-		a.TxPowerLevel(),
-		UUID,
-		Data,
-		Services,
-		ManufacturerData,
-		SolicitedService,
-		OverflowService,
+	m := beacon.Beacon{
+		Datetime:         time.Now().Format("2006-01-02T15:04:05.000Z"),
+		Mac:              a.Addr().String(),
+		Rssi:             a.RSSI(),
+		Name:             a.LocalName(),
+		Connectable:      a.Connectable(),
+		TxPower:          a.TxPowerLevel(),
+		UUID:             UUID,
+		DATA:             Data,
+		Services:         Services,
+		ManufacturerData: ManufacturerData,
+		SolicitedService: SolicitedService,
+		OverflowService:  OverflowService,
 	}
 
 	debugger.Info(m)
-	broker.Publish(m)
+
+	// Add beacon to store
+	if store.Get("mqtt:status", nil) == "connected" {
+		trame := ""
+		if a.Connectable() {
+			trame = "@info"
+		}
+		if len(UUID) > 0 {
+			trame += "@" + strings.Join(UUID, ":")
+		}
+		store.AddBeacon(a.Addr().String()+trame, m)
+	}
 
 	// Write to DB
 	if len(store.Get("db:host", nil)) > 0 {
@@ -146,14 +169,14 @@ func chkErr(err error) {
 }
 
 // Write InfluxDB
-func Write(c Beacon) {
+func Write(c beacon.Beacon) {
 
 	// debugger
 	debugger := log.WithFields(log.Fields{"package": "DB"})
 
 	client := influxdb2.NewClient(store.Get("db:host", nil), fmt.Sprintf("%s:%s", store.Get("db:user", nil), store.Get("db:pass", nil)))
 
-	writeAPI := client.WriteAPIBlocking("", "epyo/autogen")
+	writeAPI := client.WriteAPIBlocking("", "gateway/autogen")
 
 	p := influxdb2.NewPoint("stat",
 		map[string]string{"unit": "rssi", "mac": c.Mac, "Name": c.Name},

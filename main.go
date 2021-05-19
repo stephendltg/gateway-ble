@@ -4,14 +4,17 @@ import (
 	"flag"
 	"fmt"
 	"gateway-ble/broker"
+	"gateway-ble/database"
 	"gateway-ble/scanble"
 	"gateway-ble/store"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
+	metrics "github.com/tevjef/go-runtime-metrics"
 )
 
 // Vars cli
@@ -20,10 +23,14 @@ var (
 	duration = flag.Duration("du", 0, "scanning duration") // ex: 5-time.Second
 	dup      = flag.Bool("dup", true, "allow duplicate reported")
 	mqtt     = flag.String("mqtt", "", "hostname(:port<option>)")
+	interval = flag.String("interval", "5s", "Interval duration publish messsage")
 	influxdb = flag.String("db", "", "host(<http://127.0.0.1:8086>)")
-	user     = flag.String("u", "epyo", "Username influxDB")
-	pass     = flag.String("p", "epyois100%MAGIC", "Password influxDB")
+	user     = flag.String("u", "stephendltg", "Username influxDB")
+	pass     = flag.String("p", "stephendltgis100%MAGIC", "Password influxDB")
 	debug    = flag.Bool("debug", false, "Mode debug")
+	rssi     = flag.String("rssi", "130", "Beacon RSSI filter")
+	name     = flag.String("name", "", "Beacon name filter")
+	mac      = flag.String("mac", "", "Beacon Mac adress filter")
 )
 
 // Init
@@ -52,7 +59,20 @@ func init() {
 
 func main() {
 
+	debugger := log.WithFields(log.Fields{"package": "MAIN"})
+
+	if *debug {
+		err := metrics.RunCollector(metrics.DefaultConfig)
+
+		if err != nil {
+			debugger.Error(err)
+		}
+	}
+
 	fmt.Println("Initialize ....")
+
+	// Mqtt cron job
+	store.Set("mqtt:interval", *interval)
 
 	// Start broker if available
 	mqttParams := len(strings.Split(*mqtt, ":"))
@@ -61,14 +81,43 @@ func main() {
 		fmt.Println("Broker: ", *mqtt)
 	}
 
-	// DB if available
+	// DB if available && check database
 	db := len(strings.Split(*influxdb, ":"))
 	if db > 1 {
+
+		// Check database in influxDb
+		client := &http.Client{}
+		req, err := http.NewRequest("POST", *influxdb+"/query", strings.NewReader("q=CREATE%20DATABASE%20%22gateway%22"))
+		if err != nil {
+			debugger.Fatal(err)
+		}
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+		res, err := client.Do(req)
+		if err != nil {
+			debugger.Fatal(err)
+		}
+		if res.StatusCode == 200 {
+			debugger.Info("Database gateway checked")
+		} else {
+			debugger.Warn("Database gateway error", res.StatusCode)
+		}
+
+		// Prepare configuration
 		store.Set("db:host", *influxdb)
 		store.Set("db:user", *user)
 		store.Set("db:pass", *pass)
 		fmt.Println("DB influxDB : ", *influxdb)
+
 	}
+
+	// Filter
+	store.Set("filter:rssi", *rssi)
+	store.Set("filter:name", *name)
+	store.Set("filter:mac", strings.ToLower(*mac))
+
+	// Connection database SQL
+	database.Connect(*debug)
 
 	// Don't Exit
 	var wg sync.WaitGroup
@@ -76,4 +125,5 @@ func main() {
 	// Start Scan ble
 	time.AfterFunc(2*time.Second, func() { scanble.Start(*device, *duration, *dup) })
 	wg.Wait()
+
 }
