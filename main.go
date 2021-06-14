@@ -19,18 +19,19 @@ import (
 
 // Vars cli
 var (
-	device   = flag.String("device", "default", "implementation of ble")
-	duration = flag.Duration("du", 0, "scanning duration") // ex: 5-time.Second
-	dup      = flag.Bool("dup", true, "allow duplicate reported")
-	mqtt     = flag.String("mqtt", "", "hostname(:port<option>)")
+	device   = flag.String("device", "default", "Implementation of ble")
+	duration = flag.Duration("du", 0, "Scanning duration") // ex: 5-time.Second
+	dup      = flag.Bool("dup", true, "Allow duplicate reported")
+	mqtt     = flag.String("mqtt", "", "MQTT hostname(:port<option>)")
 	interval = flag.String("interval", "5s", "Interval duration publish messsage")
-	influxdb = flag.String("db", "", "host(<http://127.0.0.1:8086>)")
-	user     = flag.String("u", "stephendltg", "Username influxDB")
-	pass     = flag.String("p", "stephendltgis100%MAGIC", "Password influxDB")
+	influxdb = flag.String("db", "", "InfluxDB host (<http://127.0.0.1:8086>)")
+	user     = flag.String("u", "gateway", "Username influxDB")
+	pass     = flag.String("p", "gatewayis100%MAGIC", "Password influxDB")
 	debug    = flag.Bool("debug", false, "Mode debug")
 	rssi     = flag.String("rssi", "130", "Beacon RSSI filter")
 	name     = flag.String("name", "", "Beacon name filter")
 	mac      = flag.String("mac", "", "Beacon Mac adress filter")
+	collect  = flag.Bool("collect", false, "Metrcis runtime")
 )
 
 // Init
@@ -61,7 +62,7 @@ func main() {
 
 	debugger := log.WithFields(log.Fields{"package": "MAIN"})
 
-	if *debug {
+	if *collect {
 		err := metrics.RunCollector(metrics.DefaultConfig)
 
 		if err != nil {

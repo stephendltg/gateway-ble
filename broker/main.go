@@ -96,7 +96,7 @@ func Connect(host *string, port *string, username *string, password *string) {
 		debugger.Warn(token.Error())
 	} else {
 		// Subscribe
-		// topic := "gateway/ble/status"
+		// topic := "gateway/epyo/status"
 		// subscribe := client.Subscribe(topic, 1, nil)
 		// subscribe.Wait()
 		// debugger.Info(fmt.Sprintf("Subscribed to topic %s", topic))

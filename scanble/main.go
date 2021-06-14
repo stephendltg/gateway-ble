@@ -18,22 +18,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// // Vars
-// type Beacon struct {
-// 	Datetime         string
-// 	Mac              string
-// 	Rssi             int
-// 	Name             string
-// 	Connectable      bool
-// 	TxPower          int
-// 	UUID             []string
-// 	DATA             []string
-// 	Services         []string
-// 	ManufacturerData string
-// 	SolicitedService []string
-// 	OverflowService  []string
-// }
-
 // Start Scanner BLE
 func Start(device string, duration time.Duration, duplicate bool) {
 
@@ -89,6 +73,9 @@ func advHandler(a ble.Advertisement) {
 	ManufacturerData := ""
 	SolicitedService := []string{}
 	OverflowService := []string{}
+	var Temperature float64
+	var Humidity float64
+	var Battery int64 = -1
 
 	if len(a.ServiceData()) > 0 {
 		for i := range a.ServiceData() {
@@ -115,6 +102,64 @@ func advHandler(a ble.Advertisement) {
 		}
 	}
 
+	// ParserBeacons ELA / MINEW
+	if len(UUID) > 0 {
+
+		// Associated data to UUID
+		data := Data[0]
+
+		switch UUID[0] {
+
+		case "2a6e":
+			// Beacon ELA PT
+			// Flip hexa
+			hexaFlip := []string{}
+			for i := len(data); i > 0; i -= 2 {
+				hexaFlip = append(hexaFlip, data[i-2:i])
+			}
+			data = strings.Join(hexaFlip, "")
+			f, _ := strconv.ParseInt(data, 16, 64)
+			Temperature = float64(f) / 100
+
+		case "ffe1":
+			// Beacon minew
+			b, _ := strconv.ParseInt(data[4:6], 16, 64)
+			Battery = b
+			t := data[2:4]
+
+			//Beacon S1
+			if t == "01" {
+				f, _ := strconv.ParseInt(data[6:8], 16, 64)
+				d, _ := strconv.ParseInt(data[8:10], 16, 64)
+				Temperature = float64(f) + (float64(d)*0.4)/100
+				h, _ := strconv.ParseInt(data[10:12], 16, 64)
+				i, _ := strconv.ParseInt(data[12:14], 16, 64)
+				Humidity = float64(h) + (float64(i)*0.4)/100
+			}
+
+		default:
+
+		}
+	}
+
+	// ParserBeacons manufacture
+	if len(ManufacturerData) > 0 {
+
+		// fmt.Println(len(ManufacturerData))
+
+		// Battery radius network E4 / E2 (protocol AltBeacon)
+		if !a.Connectable() && ManufacturerData[0:4] == "1801" {
+			l := len(ManufacturerData)
+			b, _ := strconv.ParseInt(ManufacturerData[l-2:l], 16, 64)
+			Battery = b
+		}
+
+		// Beacons Minew S3
+		// if ManufacturerData[0:4] == "3906" {
+
+		// }
+	}
+
 	m := beacon.Beacon{
 		Datetime:         time.Now().Format("2006-01-02T15:04:05.000Z"),
 		Mac:              a.Addr().String(),
@@ -128,6 +173,9 @@ func advHandler(a ble.Advertisement) {
 		ManufacturerData: ManufacturerData,
 		SolicitedService: SolicitedService,
 		OverflowService:  OverflowService,
+		Temperature:      Temperature,
+		Humidity:         Humidity,
+		Battery:          Battery,
 	}
 
 	debugger.Info(m)
@@ -180,7 +228,7 @@ func Write(c beacon.Beacon) {
 
 	p := influxdb2.NewPoint("stat",
 		map[string]string{"unit": "rssi", "mac": c.Mac, "Name": c.Name},
-		map[string]interface{}{"rssi": c.Rssi, "txpower": c.TxPower},
+		map[string]interface{}{"rssi": c.Rssi, "txpower": c.TxPower, "temperature": c.Temperature, "humidity": c.Humidity, "battery": c.Battery},
 		time.Now())
 	// Write data
 	err := writeAPI.WritePoint(context.Background(), p)

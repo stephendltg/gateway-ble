@@ -1,6 +1,6 @@
 {
   "name": "gateway-ble",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Gateway BLE",
   "main": "index.js",
   "private": true,
@@ -12,7 +12,7 @@
     "linux"
   ],
   "contributors": [
-    "stephendltg"
+    "stephen@epyo.eu"
   ],
   "scripts": {
     "docker:start": "sudo docker-compose up -d --build",
@@ -23,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stephendltg/gateway-ble.git"
+    "url": "git+https://stephen-epyo@bitbucket.org/epyodev/gateway-ble.git"
   },
   "keywords": [
     "bluetooth",
@@ -31,7 +31,7 @@
     "influxdb",
     "golang"
   ],
-  "author": "stephendltg",
+  "author": "stephen@epyo.eu",
   "license": "ISC",
-  "homepage": "https://github.com/stephendltg/gateway-ble#readme"
+  "homepage": "https://bitbucket.org/epyodev/gateway-ble#readme"
 }

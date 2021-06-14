@@ -9,9 +9,18 @@ Get binary gateway-ble
 
 > sudo ./gateway-ble -mqtt=127.0.0.1:1883 -db=http://127.0.0.1:8086 -debug
 
+OR
 
-|   params              | value                 |   Description             |
-|   ==========          | ====================  | =================         |
+Get Deb packet
+
+> sudo dpkg -i gateway-linux.deb
+
+> gateway-ble -debug
+
+
+
+|    Params             | Value                 |   Description             |
+| :------------------   | :-------------------  | :----------------         |
 |   mqtt                | ex: 127.0.0.1:1883    | broker                    |
 |   interval            | ex: 1s                | Interval publish ble      |
 |   db                  | http://127.0.0.1:8086 | Influx DB host            |
@@ -31,16 +40,24 @@ Get binary gateway-ble
 
 ### GOLANG
 
-#### GOLANG
+#### INSTALL
+
 > cd /usr/local
+
 > sudo wget https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
+
 > sudo rm -rf /usr/local/go && tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
 
 > nano $HOME/.profile
 
 Add /usr/local/go/bin to the PATH environment variable
-> export PATH=$PATH:/usr/local/go/bin
+
+> export PATH=$PATH:/usr/local/go/bin [obselete]
+
+> export PATH=$PATH:$HOME/go/bin
+
 Apply change
+
 >. ~/.profile
 
 > go version
@@ -50,30 +67,40 @@ Apply change
 #### PROJET
 
 **INSTALL DEPENDANCES**
->go mod tidy
+
+> go mod tidy
 
 **ENV**
+
 >go env
 
 **RUN GO**
+
 > go run main.go
->./main
+
+> ./main
 
 **BUILD GO**
+
 > go build .
+
 >./main
 
 **Clean**
+
 > go clean -i
 
 **Install**
+
 Install app 
+
 > go install .
+
 > sudo ~/go/bin/gateway-ble
 
 ---
 
-```tips golang
+```bash
 make ~/go/src/<project>
 
 # initializing dependencies file (go.mod)
@@ -112,11 +139,17 @@ sudo service bluetooth stop
 ### BLE & ROOT
 
 __FOR ROOT (BLE ACCESS):__
+
 > sudo su
+
 > nano $HOME/.profile
+
 Add /usr/local/go/bin to the PATH environment variable
+
 > export PATH=$PATH:/usr/local/go/bin
+
 > . $HOME/.profile
+
 > make dev
 
 ### REFERENCES
@@ -129,5 +162,10 @@ Add /usr/local/go/bin to the PATH environment variable
 - __ref__: https://stackoverflow.com/questions/45585589/golang-fatal-error-concurrent-map-read-and-map-write/45585833
 
 
+### VSCODE EXT
 
+- Docker: ms-azuretools.vscode-docker
+- REST Client: humao.rest-client
+- Go: golang.go
 
+---

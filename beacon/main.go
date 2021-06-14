@@ -14,4 +14,7 @@ type Beacon struct {
 	ManufacturerData string
 	SolicitedService []string
 	OverflowService  []string
+	Temperature      float64
+	Humidity         float64
+	Battery          int64
 }

@@ -44,7 +44,7 @@ func Connect(mode bool) {
 	)
 
 	// SQL
-	DB, err := gorm.Open(sqlite.Open("database.db"), &gorm.Config{
+	DB, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
 		Logger: newLogger,
 	})
 	if err != nil {
