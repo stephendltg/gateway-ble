@@ -37,7 +37,7 @@ clean:
 	rm -f *.db
 
 deps:
-	go mod tidy
+	go mod vendor
 	go mod verify
 
 docker-run:
