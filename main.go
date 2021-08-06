@@ -31,7 +31,7 @@ var (
 	rssi     = flag.String("rssi", "130", "Beacon RSSI filter")
 	name     = flag.String("name", "", "Beacon name filter")
 	mac      = flag.String("mac", "", "Beacon Mac adress filter")
-	collect  = flag.Bool("collect", false, "Metrcis runtime")
+	collect  = flag.Bool("collect", false, "Metrics runtime")
 )
 
 // Init
